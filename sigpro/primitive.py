@@ -3,7 +3,7 @@ import json
 import inspect
 from mlblocks.discovery import load_primitive
 
-def make_primitive(primitive, primitive_type, primitive_subtype, 
+def make_primitive(primitive, primitive_type, primitive_subtype,  #No longer need to pass in primitive function assuming it is at the location in primitive name (to be imported)
                     primitive_function = None, #primitive_args,
                     context_arguments=None, fixed_hyperparameters=None,
                     tunable_hyperparameters=None, primitive_inputs = None, primitive_outputs=None):
@@ -125,7 +125,7 @@ class Primitive:
 
 
     def __init__(self, primitive, primitive_type, primitive_subtype, 
-                primitive_function, init_params = {}):
+                primitive_function = None, init_params = {}):
 
             """
             Initialize primitive object. 
@@ -142,9 +142,15 @@ class Primitive:
 
             contributing._check_primitive_type_and_subtype(primitive_type, primitive_subtype)
 
-
+            if primitive_function == None:
+                primitive_function = contributing._import_object(primitive)
             self.primitive_function = primitive_function
             self.hyperparameter_values = init_params #record the init_param values as well.
+
+	def _set_primitive_type(self, primitive_type):
+		self.primitive_type = primitive_type
+	def _set_primitive_subtype(self, primitive_subtype):
+		self.primitive_subtype = primitive_subtype
 
     def make_primitive_json(self): #return primitive json.
         self._validate_primitive_spec()
@@ -241,14 +247,14 @@ class Primitive:
 
 class TransformationPrimitive(TransformationPrimitive):
 
-    def __init__(self, primitive, primitive_subtype,  primitive_function, init_params = {}):
+    def __init__(self, primitive, primitive_subtype,  primitive_function = None, init_params = {}):
         super().__init__(primitive, 'transformation',primitive_subtype, primitive_function, init_params)
 
     pass
 
 class AmplitudeTransformation(TransformationPrimitive):
 
-    def __init__(self, primitive, primitive_function, init_params = {}):
+    def __init__(self, primitive, primitive_function = None, init_params = {}):
         super().__init__(primitive, 'amplitude', primitive_function, init_params)
 
     pass
@@ -256,14 +262,14 @@ class AmplitudeTransformation(TransformationPrimitive):
 
 class FrequencyTransformation(TransformationPrimitive):
 
-    def __init__(self, primitive, primitive_function, init_params = {}):
+    def __init__(self, primitive, primitive_function = None, init_params = {}):
         super().__init__(primitive,  'frequency', primitive_function, init_params)
 
     pass
 
 class FrequencyTimeTransformation(TransformationPrimitive):
 
-    def __init__(self, primitive,  primitive_function, init_params = {}):
+    def __init__(self, primitive,  primitive_function = None, init_params = {}):
         super().__init__(primitive, 'frequency_time', primitive_function, init_params)
 
 
@@ -271,15 +277,16 @@ class FrequencyTimeTransformation(TransformationPrimitive):
 
 class FFT(FrequencyTransformation):
     def __init__(self):
-        super().__init__("sigpro.transformations.frequency.fft.fft", sigpro.transformations.frequency.fft.fft)
+        super().__init__("sigpro.transformations.frequency.fft.fft") #, sigpro.transformations.frequency.fft.fft)
 class FFTReal(FrequencyTransformation):
     def __init__(self):
-        super().__init__("sigpro.transformations.frequency.fft.fft_real", sigpro.transformations.frequency.fft.fft_real)
+        super().__init__("sigpro.transformations.frequency.fft.fft_real")#, sigpro.transformations.frequency.fft.fft_real)
 
 class FrequencyBand(FrequencyTransformation):
 
     def __init__(self, low, high):
-        Primitive.__init__("sigpro.transformations.frequency.band.frequency_band", 'aggregation', 'frequency', sigpro.transformations.frequency.band.frequency_band,  {'low': low, 'high': high})
+        #Primitive.__init__("sigpro.transformations.frequency.band.frequency_band", 'aggregation', 'frequency', sigpro.transformations.frequency.band.frequency_band,  {'low': low, 'high': high})
+        super().__init__("sigpro.transformations.frequency.band.frequency_band", init_params =  {'low': low, 'high': high})
         primitive_spec = contributing._get_primitive_spec('aggregation', 'frequency')
         self.set_primitive_inputs(primitive_spec['args'])
         self.set_primitive_outputs([{'name': 'amplitude_values', 'type': "numpy.ndarray" }, {'name': 'frequency_values', 'type': "numpy.ndarray" }])
@@ -293,23 +300,23 @@ class ComparativeTransformation(TransformationPrimitive):
 
 
 class AggregationPrimitive(Primitive):
-    def __init__(self, primitive, primitive_subtype,  primitive_function, init_params = {}):
+    def __init__(self, primitive, primitive_subtype,  primitive_function = None, init_params = {}):
         super().__init__(primitive, 'aggregation',primitive_subtype, primitive_function, init_params)
 
 
 class AmplitudeAggregation(AggregationPrimitive):
 
-    def __init__(self, primitive, primitive_function, init_params = {}):
+    def __init__(self, primitive, primitive_function = None, init_params = {}):
         super().__init__(primitive, 'amplitude', primitive_function, init_params)
 
 class FrequencyAggregation(AggregationPrimitive):
 
-    def __init__(self, primitive, primitive_function, init_params = {}):
+    def __init__(self, primitive, primitive_function = None, init_params = {}):
         super().__init__(primitive,  'frequency', primitive_function, init_params)
 
 class FrequencyTimeAggregation(AggregationPrimitive):
 
-    def __init__(self, primitive,  primitive_function, init_params = {}):
+    def __init__(self, primitive,  primitive_function = None, init_params = {}):
         super().__init__(primitive, 'frequency_time', primitive_function, init_params)
 
 
