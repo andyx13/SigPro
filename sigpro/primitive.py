@@ -146,12 +146,6 @@ class Primitive:
             self.primitive_function = primitive_function
             self.hyperparameter_values = init_params #record the init_param values as well.
 
-            for param in init_params: #validate that param is a hyperparameter
-                if param not in self.tunable_hyperparameters and param not in self.fixed_hyperparameters:
-                    if param in COMMON_PARAMS:
-                        self.fixed_hyperparameters[param] = 
-                pass
-
     def make_primitive_json(self): #return primitive json.
         self._validate_primitive_spec()
         return make_primitive(self.primitive, self.primitive_type, self.primitive_subtype, self.primitive_function , self.context_arguments, self.fixed_hyperparameters, self.tunable_hyperparameters, self.primitive_outputs)
@@ -290,7 +284,7 @@ class FrequencyBand(FrequencyTransformation):
         self.set_primitive_inputs(primitive_spec['args'])
         self.set_primitive_outputs([{'name': 'amplitude_values', 'type': "numpy.ndarray" }, {'name': 'frequency_values', 'type': "numpy.ndarray" }])
         self.set_fixed_hyperparameters({'low': {'type': 'int'}, 'high': {'type': 'int'}})
-        
+
 ### end specific examples
 
 
