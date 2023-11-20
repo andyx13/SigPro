@@ -2,54 +2,55 @@ from sigpro import contributing
 import json
 import inspect
 from mlblocks.discovery import load_primitive
+from mlblocks.mlblock import import_object
 
 def make_primitive(primitive, primitive_type, primitive_subtype,  #No longer need to pass in primitive function assuming it is at the location in primitive name (to be imported)
                     primitive_function = None, #primitive_args,
                     context_arguments=None, fixed_hyperparameters=None,
                     tunable_hyperparameters=None, primitive_inputs = None, primitive_outputs=None):
-        """Create a primitive JSON.
+    """Create a primitive JSON.
 
-        During the JSON creation the primitive function signature is validated to
-        ensure that it matches the primitive type and subtype implicitly specified
-        by the primitive name.
+    During the JSON creation the primitive function signature is validated to
+    ensure that it matches the primitive type and subtype implicitly specified
+    by the primitive name.
 
-        Any additional function arguments are also validated to ensure that the
-        function does actually expect them.
+    Any additional function arguments are also validated to ensure that the
+    function does actually expect them.
 
-        Args:
-            primitive (str):
-                The name of the primitive, the python path including the name of the
-                module and the name of the function.
-            primitive_type (str):
-                Type of primitive.
-            primitive_subtype (str):
-                Subtype of the primitive.
-            primitive_function (function):
-                Function applied by the primitive.
-            context_arguments (list or None):
-                A list with dictionaries containing the name and type of the context arguments.
-            fixed_hyperparameters (dict or None):
-                A dictionary containing as key the name of the hyperparameter and as
-                value a dictionary containing the type and the default value that it
-                should take.
-            tunable_hyperparameters (dict or None):
-                A dictionary containing as key the name of the hyperparameter and as
-                value a dictionary containing the type and the default value and the
-                range of values that it can take.
-            primitive_inputs (list or None):
-                A list with dictionaries containing the name and type of the input values. If
-                ``None`` default values for those will be used.
-            primitive_outputs (list or None):
-                A list with dictionaries containing the name and type of the output values. If
-                ``None`` default values for those will be used.
+    Args:
+        primitive (str):
+            The name of the primitive, the python path including the name of the
+            module and the name of the function.
+        primitive_type (str):
+            Type of primitive.
+        primitive_subtype (str):
+            Subtype of the primitive.
+        primitive_function (function):
+            Function applied by the primitive.
+        context_arguments (list or None):
+            A list with dictionaries containing the name and type of the context arguments.
+        fixed_hyperparameters (dict or None):
+            A dictionary containing as key the name of the hyperparameter and as
+            value a dictionary containing the type and the default value that it
+            should take.
+        tunable_hyperparameters (dict or None):
+            A dictionary containing as key the name of the hyperparameter and as
+            value a dictionary containing the type and the default value and the
+            range of values that it can take.
+        primitive_inputs (list or None):
+            A list with dictionaries containing the name and type of the input values. If
+            ``None`` default values for those will be used.
+        primitive_outputs (list or None):
+            A list with dictionaries containing the name and type of the output values. If
+            ``None`` default values for those will be used.
 
-        Raises:
-            ValueError:
-                If the primitive specification arguments are not valid.
+    Raises:
+        ValueError:
+            If the primitive specification arguments are not valid.
 
-        Returns:
-            dict:
-                Generated JSON file as a python dictionary
+    Returns:
+        dict:
+            Generated JSON file as a python dictionary
     """
     context_arguments = context_arguments or []
     fixed_hyperparameters = fixed_hyperparameters or {}
@@ -60,7 +61,7 @@ def make_primitive(primitive, primitive_type, primitive_subtype,  #No longer nee
     primitive_outputs = primitive_outputs or primitive_spec['output']
 
     if primitive_function == None:
-        primitive_function = contributing._import_object(primitive)
+        primitive_function = import_object(primitive)
 
     primitive_args = contributing._get_primitive_args(
         primitive_function,
@@ -93,7 +94,6 @@ def make_primitive(primitive, primitive_type, primitive_subtype,  #No longer nee
         }
     }
     return primitive_dict
-
 
 
 class Primitive: 
@@ -143,7 +143,7 @@ class Primitive:
             contributing._check_primitive_type_and_subtype(primitive_type, primitive_subtype)
 
             if primitive_function == None:
-                primitive_function = contributing._import_object(primitive)
+                primitive_function = import_object(primitive)
             self.primitive_function = primitive_function
             self.hyperparameter_values = init_params #record the init_param values as well.
 
@@ -245,32 +245,32 @@ class Primitive:
 
 
 
-class TransformationPrimitive(TransformationPrimitive):
+class TransformationPrimitive(Primitive):
 
-    def __init__(self, primitive, primitive_subtype,  primitive_function = None, init_params = {}):
-        super().__init__(primitive, 'transformation',primitive_subtype, primitive_function, init_params)
+    def __init__(self, primitive, primitive_subtype,  init_params = {}):
+        super().__init__(primitive, 'transformation',primitive_subtype, init_params = init_params)
 
     pass
 
 class AmplitudeTransformation(TransformationPrimitive):
 
-    def __init__(self, primitive, primitive_function = None, init_params = {}):
-        super().__init__(primitive, 'amplitude', primitive_function, init_params)
+    def __init__(self, primitive, init_params = {}):
+        super().__init__(primitive, 'amplitude', init_params = init_params)
 
     pass
 
 
 class FrequencyTransformation(TransformationPrimitive):
 
-    def __init__(self, primitive, primitive_function = None, init_params = {}):
-        super().__init__(primitive,  'frequency', primitive_function, init_params)
+    def __init__(self, primitive, init_params = {}):
+        super().__init__(primitive,  'frequency', init_params = init_params)
 
     pass
 
 class FrequencyTimeTransformation(TransformationPrimitive):
 
-    def __init__(self, primitive,  primitive_function = None, init_params = {}):
-        super().__init__(primitive, 'frequency_time', primitive_function, init_params)
+    def __init__(self, primitive, init_params = {}):
+        super().__init__(primitive, 'frequency_time', init_params = init_params)
 
 
 ###some specific examples
@@ -300,28 +300,28 @@ class ComparativeTransformation(TransformationPrimitive):
 
 
 class AggregationPrimitive(Primitive):
-    def __init__(self, primitive, primitive_subtype,  primitive_function = None, init_params = {}):
-        super().__init__(primitive, 'aggregation',primitive_subtype, primitive_function, init_params)
+    def __init__(self, primitive, primitive_subtype, init_params = {}):
+        super().__init__(primitive, 'aggregation', primitive_subtype, init_params = init_params)
 
 
 class AmplitudeAggregation(AggregationPrimitive):
 
-    def __init__(self, primitive, primitive_function = None, init_params = {}):
-        super().__init__(primitive, 'amplitude', primitive_function, init_params)
+    def __init__(self, primitive,  init_params = {}):
+        super().__init__(primitive, 'amplitude', init_params = init_params)
 
 class FrequencyAggregation(AggregationPrimitive):
 
-    def __init__(self, primitive, primitive_function = None, init_params = {}):
-        super().__init__(primitive,  'frequency', primitive_function, init_params)
+    def __init__(self, primitive,  init_params = {}):
+        super().__init__(primitive,  'frequency',  init_params = init_params)
 
 class FrequencyTimeAggregation(AggregationPrimitive):
 
-    def __init__(self, primitive,  primitive_function = None, init_params = {}):
-        super().__init__(primitive, 'frequency_time', primitive_function, init_params)
+    def __init__(self, primitive, init_params = {}):
+        super().__init__(primitive, 'frequency_time', init_params = init_params)
 
 
 
-class ComparativeAggregation(TransformationPrimitive):
+class ComparativeAggregation(AggregationPrimitive):
     pass
 
 def primitive_from_json(json_path,init_params = {}): #Create the proper primitive object given an input json, primitive_functio and hyperparameters.
@@ -330,7 +330,6 @@ def primitive_from_json(json_path,init_params = {}): #Create the proper primitiv
     primitive = primitive_dict['primitive']
     primitive_type = primitive_dict['classifiers']['type']
     primitive_subtype = primitive_dict['classifiers']['subtype']
-    primitive_function = contributing._import_object(primitive)
 
-    return Primitive(primitive, primitive_type, primitive_subtype, primitive_function, init_params)
+    return Primitive(primitive, primitive_type, primitive_subtype, init_params = init_params)
     
