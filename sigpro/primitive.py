@@ -97,12 +97,12 @@ def make_primitive(primitive, primitive_type, primitive_subtype,  #No longer nee
 
 
 class Primitive: 
-		"""
-		This class will support (via inheritance) the creation of custom user-defined primitive classes.
-		It will automatically construct JSONs for several primitive types and allow for
+    """
+    This class will support (via inheritance) the creation of custom user-defined primitive classes.
+    It will automatically construct JSONs for several primitive types and allow for
     easier use in linear/tree/layer pipeline architectures.
-		"""
-    
+    """
+
         #init should probably only take in the primitive and primitive type/subtype, both of which can be called within the individual classes, so they wont ever be 
         #explicitly passed by the user. 
         
@@ -127,30 +127,30 @@ class Primitive:
     def __init__(self, primitive, primitive_type, primitive_subtype, 
                 primitive_function = None, init_params = {}):
 
-            """
-            Initialize primitive object. 
-            """
-            self.primitive = primitive
-            self.primitive_type = primitive_type
-            self.primitive_subtype = primitive_subtype
-            self.tunable_hyperparameters = {}
-            self.fixed_hyperparameters = {}
-            self.context_arguments = []
-            primitive_spec = contributing._get_primitive_spec(primitive_type, primitive_subtype)
-            self.primitive_inputs = primitive_spec['args']
-            self.primitive_outputs = primitive_spec['output']
+        """
+        Initialize primitive object. 
+        """
+        self.primitive = primitive
+        self.primitive_type = primitive_type
+        self.primitive_subtype = primitive_subtype
+        self.tunable_hyperparameters = {}
+        self.fixed_hyperparameters = {}
+        self.context_arguments = []
+        primitive_spec = contributing._get_primitive_spec(primitive_type, primitive_subtype)
+        self.primitive_inputs = primitive_spec['args']
+        self.primitive_outputs = primitive_spec['output']
 
-            contributing._check_primitive_type_and_subtype(primitive_type, primitive_subtype)
+        contributing._check_primitive_type_and_subtype(primitive_type, primitive_subtype)
 
-            if primitive_function == None:
-                primitive_function = import_object(primitive)
-            self.primitive_function = primitive_function
-            self.hyperparameter_values = init_params #record the init_param values as well.
+        if primitive_function == None:
+            primitive_function = import_object(primitive)
+        self.primitive_function = primitive_function
+        self.hyperparameter_values = init_params #record the init_param values as well.
 
-	def _set_primitive_type(self, primitive_type):
-		self.primitive_type = primitive_type
-	def _set_primitive_subtype(self, primitive_subtype):
-		self.primitive_subtype = primitive_subtype
+    def _set_primitive_type(self, primitive_type):
+        self.primitive_type = primitive_type
+    def _set_primitive_subtype(self, primitive_subtype):
+        self.primitive_subtype = primitive_subtype
 
     def make_primitive_json(self): #return primitive json.
         self._validate_primitive_spec()
@@ -216,9 +216,9 @@ class Primitive:
 
     #these methods would specifically alter the primitive function/json to accept keywords.
     def rename_inputs(self, input_names): #potentially needed for layer pipelines?
-            pass
+        pass
     def rename_outputs(self, input_names): #potentially needed for layer pipelines?
-            pass
+        pass
 
 
 
@@ -235,12 +235,12 @@ class Primitive:
     
     
     def get_hyperparam_dict(self, name = None):
-            """
-            Return the dictionary of parameters (for use in larger pipelines such as Linear, etc)
-            """
-            if name == None:
-                name = self.primitive
-            return { 'name': name, 'primitive': self.primitive, 'init_params': self.hyperparameter_values}
+        """
+        Return the dictionary of parameters (for use in larger pipelines such as Linear, etc)
+        """
+        if name == None:
+            name = self.primitive
+        return { 'name': name, 'primitive': self.primitive, 'init_params': self.hyperparameter_values}
 
 
 
