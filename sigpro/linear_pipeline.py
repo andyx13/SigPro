@@ -3,6 +3,7 @@
 
 from collections import Counter
 from copy import deepcopy
+from abc import ABC
 
 import pandas as pd
 from mlblocks import MLPipeline, load_primitive
@@ -31,106 +32,13 @@ DEFAULT_OUTPUT = [
     }
 ]
 
-class Pipeline:
+class Pipeline(ABC):
 
     def __init__(self):
         self.values_column_name = 'values'
         self.input_is_dataframe = True
+        self.pipeline = None
 
-    def get_input_args(self):
-        raise NotImplementedError
-
-    def get_output_args(self):
-        raise NotImplementedError
-
-    def process_signal(self, data=None, window=None, time_index=None, groupby_index=None, feature_columns=None, values_column_name = 'values', keep_columns = False, **kwargs):
-        raise NotImplementedError
-
-    pass
-
-    
-"""
-Analogue of sigpro.SigPro object in current use, takes in same arguments.
-Only distinction is that we accept primitive objects, rather than dict inputs.
-"""
-class LinearPipeline(Pipeline): 
-
-    def __init__(self, transformations, aggregations): 
-        self.primitive = 'sigpro.SigPro' #change later.
-
-        self.transformations = transformations
-        self.aggregations = aggregations
-        self.values_column_name = 'values' #values_column_name
-        self.input_is_dataframe = True #input_is_dataframe
-
-        #     pass
-        primitives = []
-        init_params = {}
-        prefix = []
-        outputs = []
-        counter = Counter()
-
-        for transformation_ in self.transformations:
-            transformation_._validate_primitive_spec()
-            transformation = transformation_.get_hyperparam_dict()
-
-            name = transformation.get('name')
-            if name is None:
-                name = transformation['primitive'].split('.')[-1]
-
-            prefix.append(name)
-            primitive = transformation['primitive']
-            counter[primitive] += 1
-            primitive_name = f'{primitive}#{counter[primitive]}'
-            primitives.append(primitive)
-            params = transformation.get('init_params')
-            if params:
-                init_params[primitive_name] = params
-
-        prefix = '.'.join(prefix) if prefix else ''
-
-        for aggregation_ in self.aggregations:
-            aggregation_._validate_primitive_spec()
-            aggregation = aggregation_.get_hyperparam_dict()
-
-            name = aggregation.get('name')
-            if name is None:
-                name = aggregation['primitive'].split('.')[-1]
-
-            aggregation_name = f'{prefix}.{name}' if prefix else name
-
-            primitive = aggregation['primitive']
-            counter[primitive] += 1
-            primitive_name = f'{primitive}#{counter[primitive]}'
-            primitives.append(primitive)
-
-            primitive = aggregation_.make_primitive_json()
-            primitive_outputs = primitive['produce']['output']
-
-            params = aggregation.get('init_params')
-            if params:
-                init_params[primitive_name] = params
-
-            if name.lower() == 'sigpro':
-                primitive = MLPipeline([primitive], init_params={'sigpro.SigPro#1': params})
-                primitive_outputs = primitive.get_outputs()
-
-            # primitive_outputs = getattr(self, primitive_outputs)()
-            if not isinstance(primitive_outputs, str):
-                for output in primitive_outputs:
-                    output = output['name']
-                    outputs.append({
-                        'name': f'{aggregation_name}.{output}',
-                        'variable': f'{primitive_name}.{output}'
-                    })
-
-        outputs = {'default': outputs} if outputs else None
-
-        self.pipeline = MLPipeline(
-            primitives,
-            init_params=init_params,
-            outputs=outputs)
-            
 
     def set_values_column_name(values_column_name):
         self.values_column_name = values_column_name
@@ -248,6 +156,91 @@ class LinearPipeline(Pipeline):
             return deepcopy(DEFAULT_OUTPUT)
 
         return self.pipeline.get_outputs()
+
+
+    
+"""
+Analogue of sigpro.SigPro object in current use, takes in same arguments.
+Only distinction is that we accept primitive objects, rather than dict inputs.
+"""
+class LinearPipeline(Pipeline): 
+
+    def __init__(self, transformations, aggregations): 
+
+        super().__init__()
+        self.primitive = 'sigpro.SigPro' #change later.
+
+        self.transformations = transformations
+        self.aggregations = aggregations
+
+        #     pass
+        primitives = []
+        init_params = {}
+        prefix = []
+        outputs = []
+        counter = Counter()
+
+        for transformation_ in self.transformations:
+            transformation_._validate_primitive_spec()
+            transformation = transformation_.get_hyperparam_dict()
+
+            name = transformation.get('name')
+            if name is None:
+                name = transformation['primitive'].split('.')[-1]
+
+            prefix.append(name)
+            primitive = transformation['primitive']
+            counter[primitive] += 1
+            primitive_name = f'{primitive}#{counter[primitive]}'
+            primitives.append(primitive)
+            params = transformation.get('init_params')
+            if params:
+                init_params[primitive_name] = params
+
+        prefix = '.'.join(prefix) if prefix else ''
+
+        for aggregation_ in self.aggregations:
+            aggregation_._validate_primitive_spec()
+            aggregation = aggregation_.get_hyperparam_dict()
+
+            name = aggregation.get('name')
+            if name is None:
+                name = aggregation['primitive'].split('.')[-1]
+
+            aggregation_name = f'{prefix}.{name}' if prefix else name
+
+            primitive = aggregation['primitive']
+            counter[primitive] += 1
+            primitive_name = f'{primitive}#{counter[primitive]}'
+            primitives.append(primitive)
+
+            primitive = aggregation_.make_primitive_json()
+            primitive_outputs = primitive['produce']['output']
+
+            params = aggregation.get('init_params')
+            if params:
+                init_params[primitive_name] = params
+
+            if name.lower() == 'sigpro':
+                primitive = MLPipeline([primitive], init_params={'sigpro.SigPro#1': params})
+                primitive_outputs = primitive.get_outputs()
+
+            # primitive_outputs = getattr(self, primitive_outputs)()
+            if not isinstance(primitive_outputs, str):
+                for output in primitive_outputs:
+                    output = output['name']
+                    outputs.append({
+                        'name': f'{aggregation_name}.{output}',
+                        'variable': f'{primitive_name}.{output}'
+                    })
+
+        outputs = {'default': outputs} if outputs else None
+
+        self.pipeline = MLPipeline(
+            primitives,
+            init_params=init_params,
+            outputs=outputs)
+            
 
 
 """
