@@ -211,3 +211,72 @@ class Primitive:
         for hyperparam in hyperparams:
             del self.tunable_hyperparameters[hyperparam]
 
+
+
+class TransformationPrimitive(Primitive):
+
+    def __init__(self, primitive, primitive_subtype,  init_params = {}):
+        super().__init__(primitive, 'transformation',primitive_subtype, init_params = init_params)
+
+    pass
+
+class AmplitudeTransformation(TransformationPrimitive):
+
+    def __init__(self, primitive, init_params = {}):
+        super().__init__(primitive, 'amplitude', init_params = init_params)
+
+    pass
+
+
+class FrequencyTransformation(TransformationPrimitive):
+
+    def __init__(self, primitive, init_params = {}):
+        super().__init__(primitive,  'frequency', init_params = init_params)
+
+    pass
+
+class FrequencyTimeTransformation(TransformationPrimitive):
+
+    def __init__(self, primitive, init_params = {}):
+        super().__init__(primitive, 'frequency_time', init_params = init_params)
+
+
+
+
+class ComparativeTransformation(TransformationPrimitive):
+    pass
+
+
+class AggregationPrimitive(Primitive):
+    def __init__(self, primitive, primitive_subtype, init_params = {}):
+        super().__init__(primitive, 'aggregation', primitive_subtype, init_params = init_params)
+
+
+class AmplitudeAggregation(AggregationPrimitive):
+
+    def __init__(self, primitive,  init_params = {}):
+        super().__init__(primitive, 'amplitude', init_params = init_params)
+
+class FrequencyAggregation(AggregationPrimitive):
+
+    def __init__(self, primitive,  init_params = {}):
+        super().__init__(primitive,  'frequency',  init_params = init_params)
+
+class FrequencyTimeAggregation(AggregationPrimitive):
+
+    def __init__(self, primitive, init_params = {}):
+        super().__init__(primitive, 'frequency_time', init_params = init_params)
+
+
+class ComparativeAggregation(AggregationPrimitive):
+    pass
+
+def primitive_from_json(json_path,init_params = {}): #Create the proper primitive object given an input json, primitive_functio and hyperparameters.
+    primitive_dict = load_primitive(json_path)
+
+    primitive = primitive_dict['primitive']
+    primitive_type = primitive_dict['classifiers']['type']
+    primitive_subtype = primitive_dict['classifiers']['subtype']
+
+    return Primitive(primitive, primitive_type, primitive_subtype, init_params = init_params)
+    
