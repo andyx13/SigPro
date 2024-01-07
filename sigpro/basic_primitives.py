@@ -1,4 +1,4 @@
-import primitive
+from sigpro import primitive
 
 ###### Transformations
 #### Amplitude
